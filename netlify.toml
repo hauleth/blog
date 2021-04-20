@@ -2,3 +2,10 @@
   for = "/*"
   [headers.values]
     Permission-Policy = "interest-cohort=()"
+
+[build]
+  command = "zola build"
+  publish = "public/"
+
+[context.deploy-preview]
+  command = "zola build --drafts"
