@@ -6,5 +6,6 @@ in
   pkgs.mkShell {
     buildInputs = [
       blog.zola
+      pkgs.languagetool
     ];
   }

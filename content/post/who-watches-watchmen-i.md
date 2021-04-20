@@ -13,14 +13,14 @@ If you are wondering about the presentation, [the slides are on SpeakerDeck][sli
 
 ## Abstract
 
-Currently most of the operating systems are multi-process and multi-user
+Currently, most of the operating systems are multi-process and multi-user
 operating systems. This has a lot of positive aspects, like to be able to do
 more than one thing at the time at our devices, but it introduces a lot of
 complexities that in most cases are hidden from the users and developers.
-However these things still need to be handled in one or another way. The most
+However, these things still need to be handled in one or another way. The most
 basic problems are:
 
-- some processes need to be ran before user can interact with the OS
+- some processes need to be started before user can interact with the OS
   in meaningful (for them) way (for example mounting filesystems, logging,
   etc.)
 - some processes require strict startup ordering, for example you may need
@@ -36,7 +36,7 @@ basic problems are:
 ## Why we need system supervisor?
 
 System supervisor is a process started early in the OS boot, that should handle
-starting and managing all other processes that will be ran on our system. It is
+starting and managing all other processes that will be run on our system. It is
 often the init process (first process started by the OS that is running with PID
 1) or it is first (and sometimes only) process started by the init process.
 Popular examples of such supervisors (often integrated with init systems):
@@ -59,7 +59,7 @@ Popular examples of such supervisors (often integrated with init systems):
   employee, (in)famous Lennart Poettering, and later was adopted by almost all
   major Linux distributions which spawned some heated discussion about it
 
-In this article I will focus on systemd and it's approach to "new-style system
+In this article I will focus on systemd, and its approach to "new-style system
 daemons".
 
 ---
@@ -80,25 +80,23 @@ live with that.
 mildly irritating and non-parallelizable. In short, SysV is starting processes
 exactly in lexicographical order of files in given directory. This meant, that
 even if your service didn't need the DB at all, but it somehow ended further in
-the directory listing, you ended in waiting for the DB startup. Additionally
+the directory listing, you ended in waiting for the DB startup. Additionally,
 SysV wasn't really monitoring services, it just assumed that when process forked
-itself to the background, then it is "done" with the startup and we can
+itself to the background, then it is "done" with the startup, and we can
 continue. This is obviously not true in many cases, for example, if your
 previous shutdown wasn't clean because of power shortage or other issue, then
-your DB probably need a little bit time to rebuild state from journal. This
-causes even more slowdown for the processes further in the list. This is highly
+your DB probably need a bit of time to rebuild state from journal. This causes
+even more slowdown for the processes further in the list. This is highly
 undesired in modern, cloud-based, environment, where you can often start the
 machines on-demand during autoscaling actions. When there is a spike in the
 traffic that need autoscaling, then the sooner new machine is in usable state
-the sooner it can take load from other machines. In case of very sudden spikes
-(like slashdot effect) it can be difference between life and death of your
-infrastructure.
+the sooner it can take load from other machines.
 
 Different tools take different approach to solve that issue there. `systemd`
 take approach that is derived from `launchd` - do not do stuff, that is not
 needed. It achieved that by merging D-Bus into the `systemd` itself, and then
 making all service to be D-Bus daemons (which are started on request), and
-additionally it provides bunch of triggers for that daemons. We can trigger on
+additionally it provides a bunch of triggers for that daemons. We can trigger on
 action of other services (obviously), but also on stuff like socket activity,
 path creation/modification, mounts, connection or disconnection of device,
 time events, etc.
@@ -110,7 +108,7 @@ time events, etc.
 This is exactly the reason why `systemd` has its infamous "feature creep", it
 doesn't "digest" all services like Cron or `udev`. It is not that these are
 "tightly" intertwined into `systemd`. You can still replace them with their
-older counterparts, you will just loose all the features these bring with them.
+older counterparts, you will just lose all the features these bring with them.
 
 ---
 
@@ -127,16 +125,16 @@ accidental.
 About restarting, we can define behaviour of service after main process die. It
 can be restarted regardless of the exit code, it can be restarted on abnormal
 exit, it can remain shut, etc. Does this ring a bell? This works similarly to
-OTP supervisors, but "one level above". If your service utilise system
+OTP supervisors, but "one level above". If your service utilize system
 supervisor right, you can make your application almost ultimately self-healing
 (by restarts).
 
 ## BEAM integration
 
 So now when we know a little about how and why `systemd` works as it works. We
-now can go to details on how to utilise that with services in Elixir.
+now can go to details on how to utilize that with services in Elixir.
 
-As a base we will implement super simple Plug application.
+As a base we will implement super simple Plug application:
 
 ```elixir
 # hello/application.ex
@@ -158,7 +156,9 @@ defmodule Hello.Application do
     ]
   end
 end
+```
 
+```elixir
 # hello/router.ex
 defmodule Hello.Router do
   use Plug.Router
@@ -197,14 +197,14 @@ Now you can create file with that content in
 This is the simplest service imaginable, however from the start we have few
 issues there:
 
-- It will run service as user running supervisor, so if it is ran using global
+- It will run service as user running supervisor, so if it is run using global
   supervisor, then it will run as `root`. You do not want to run anything as
   `root`.
 - On error it will produce (BEAM) core dump, which may contain sensitive data.
 - It can read (and, due to being run as `root`, write) everything in the system,
   like private data of other processes.
 
-So we need to secure that a little bit.
+So we need to secure that a little.
 
 ### Security
 
@@ -248,10 +248,10 @@ Environment=ERL_CRASH_DUMB_SECONDS=0
 ```
 
 With that we achieved quite similar level of isolation to what Docker (or other
-container runtime) is providing, but using your OS file system. That mean, that
+container runtime) is providing, but using your OS file system. Meaning, that
 updates done by your system package manager will be applied to all running
-services. That mean that you do not need to rebuild all your containers when
-there is security patch issued for one of your dependencies.
+services. With that you do not need to rebuild all your containers when there is
+security patch issued for one of your dependencies.
 
 ## Summary
 
